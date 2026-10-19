@@ -1,0 +1,30 @@
+export const colors = {
+  accent: "#e63946",
+  accentDark: "#c92f3a",
+  background: "#f5f5f5",
+  border: "#e3e1de",
+  borderError: "#f0c3c3",
+  borderSuccess: "#b8dfc2",
+  charcoal: "#151515",
+  muted: "#6b6b6b",
+  mutedLight: "#858585",
+  secondary: "#457b9d",
+  secondaryLight: "#e8f1f5",
+  secondaryTint: "#f0f6f8",
+  surfaceMuted: "#e7e5e2",
+  surface: "#ffffff",
+  success: "#287a42",
+  successBackground: "#edf8f0",
+  error: "#b00020",
+  errorBackground: "#fff0f0",
+  text: "#252525",
+  textOnDark: "#ffffff",
+  textSecondary: "#555555",
+  textUnavailable: "#aa3333",
+} as const;
+
+export const layout = {
+  contentMaxWidth: 680,
+  horizontalPadding: 16,
+  pageBottomPadding: 112,
+} as const;

@@ -1,0 +1,19 @@
+{
+  "name": "tapasbar-booking-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "start": "node --env-file=.env src/index.js",
+    "dev": "node --watch --env-file=.env src/index.js",
+    "test": "node --test",
+    "check-db": "node --env-file=.env src/check-database.js",
+    "bootstrap-manager": "node --env-file=.env src/create-manager.js",
+    "reset-managed-password": "node --env-file=.env src/reset-managed-account-password.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "pg": "^8.23.1",
+    "resend": "^6.31.0"
+  }
+}
