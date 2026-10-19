@@ -5,6 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "node --env-file=.env src/index.js",
+    "start:prod": "node src/index.js",
     "dev": "node --watch --env-file=.env src/index.js",
     "test": "node --test",
     "check-db": "node --env-file=.env src/check-database.js",
