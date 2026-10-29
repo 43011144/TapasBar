@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -55,3 +55,18 @@ jobs:
           path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 90
+
+      - name: Publish APK to repository Code tab
+        if: github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p apk
+          cp android/app/build/outputs/apk/release/app-release.apk apk/TapasBar.apk
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apk/TapasBar.apk
+          if git diff --cached --quiet; then
+            echo "The APK is unchanged; no repository commit is needed."
+          else
+            git commit -m "Update downloadable Android APK"
+            git push origin HEAD:main
+          fi

@@ -4,15 +4,14 @@ Tapas Pub & Grill is an Expo Router mobile app with an Express API in `server/`.
 
 ## Download and install the Android APK
 
-Every push to `main` builds an Android APK with GitHub Actions. You can also start a build manually:
+After a successful build, the latest APK is published in the repository at [`apk/TapasBar.apk`](apk/TapasBar.apk). Each push to `main` rebuilds the app and updates that file. A copy is also kept as a GitHub Actions artifact for 90 days.
 
-1. Open the [Android APK workflow](https://github.com/43011144/TapasBar/actions/workflows/android-apk.yml).
-2. Select the latest successful **Build installable APK** run.
-3. In **Artifacts**, download `tapasbar-android-apk` and unzip it.
-4. Copy `app-release.apk` to your Android device and open it.
-5. If Android asks, allow your browser or file manager to install unknown apps, then tap **Install**.
+1. Open the repository's **Code** tab and open the `apk` folder.
+2. Select `TapasBar.apk` and use **Download raw file**.
+3. Copy the APK to your Android device and open it.
+4. If prompted, allow your browser or file manager to install unknown apps, then tap **Install**.
 
-The APK is built for direct installation on Android devices. The GitHub Actions build is for testing and is not a Google Play Store release. Android may require you to uninstall an earlier Actions build before installing a later one.
+You can also download it from the [Android APK workflow](https://github.com/43011144/TapasBar/actions/workflows/android-apk.yml): select the latest successful run and download `tapasbar-android-apk` under **Artifacts**. The GitHub Actions build is for direct testing and is not a Google Play Store release. Android may require you to uninstall an earlier Actions build before installing a later one.
 
 ## Build an APK with EAS
 
