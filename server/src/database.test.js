@@ -62,6 +62,33 @@ test("accepts raw PostgreSQL connection fields without URI password encoding", (
   );
 });
 
+test("prefers the hosted Supabase connection URL when PG fields are partial", () => {
+  const connectionString =
+    "postgresql://postgres.project-ref:encoded%40password@aws-0-region.pooler.supabase.com:5432/postgres";
+
+  assert.deepEqual(
+    getConnectionConfig({
+      PGPORT: "5432",
+      PGUSER: "postgres.project-ref",
+      SUPABASE_DB_URL: connectionString,
+    }),
+    {
+      connectionString,
+      host: "aws-0-region.pooler.supabase.com",
+    },
+  );
+});
+
+test("prefers DATABASE_URL over partial PG variables supplied by a host", () => {
+  const connectionString =
+    "postgres://postgres:encoded%40password@db.example.supabase.co:5432/postgres";
+
+  assert.deepEqual(
+    getConnectionConfig({ PGPORT: "5432", DATABASE_URL: connectionString }),
+    { connectionString, host: "db.example.supabase.co" },
+  );
+});
+
 test("rejects incomplete direct PostgreSQL connection settings", () => {
   assert.throws(
     () => getConnectionConfig({ PGHOST: "db.example.supabase.co" }),

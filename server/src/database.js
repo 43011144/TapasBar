@@ -26,6 +26,18 @@ function createPool(env = process.env) {
 }
 
 function getConnectionConfig(env = process.env) {
+  // Render and other hosts usually expose one connection URL. Prefer it over
+  // partial PG* variables left in the service environment, which otherwise
+  // make pg fail during module import before the API can start.
+  const connectionString = env.SUPABASE_DB_URL || env.DATABASE_URL;
+  if (connectionString) {
+    const url = new URL(connectionString);
+    if (url.protocol !== "postgres:" && url.protocol !== "postgresql:") {
+      throw new Error("DATABASE_URL must be a PostgreSQL connection URL.");
+    }
+    return { connectionString, host: url.hostname };
+  }
+
   const directConnectionVariables = [
     "PGHOST",
     "PGPORT",
@@ -41,7 +53,7 @@ function getConnectionConfig(env = process.env) {
     const missing = directConnectionVariables.filter((name) => !env[name]);
     if (missing.length > 0) {
       throw new Error(
-        `Incomplete PostgreSQL connection settings; set ${missing.join(", ")}.`,
+        `Incomplete PostgreSQL connection settings; set ${missing.join(", ")} or provide SUPABASE_DB_URL/DATABASE_URL.`,
       );
     }
     return {
@@ -53,12 +65,9 @@ function getConnectionConfig(env = process.env) {
     };
   }
 
-  if (!env.DATABASE_URL) {
+  if (!hasDirectConnectionVariables) {
     return {};
   }
-
-  const url = new URL(env.DATABASE_URL);
-  return { connectionString: env.DATABASE_URL, host: url.hostname };
 }
 
 function getSslOptions(env, connectionHost, localHosts) {

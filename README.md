@@ -30,6 +30,12 @@ When the build finishes, use its install/download link to get the APK on your de
 
 Install Node.js LTS first; it includes both `node` and `npm`. After installing, close and reopen VS Code so its terminal refreshes `PATH`, then check `node --version` and `npm --version`. If PowerShell says `npm` is not recognized, Node.js is not installed or VS Code needs to be restarted.
 
+### Connect the Render API to hosted Supabase
+
+The Render log `Incomplete PostgreSQL connection settings; set PGHOST` means the API received only some `PG*` database variables. In the Supabase dashboard, open **Connect**, choose **Session pooler**, and copy its URI. In Render, open the `Tapasbar-api` service's **Environment** settings and add that full URI as `DATABASE_URL` (or `SUPABASE_DB_URL`). The API prefers this URI over partial `PG*` values, so you do not need Docker or a local PostgreSQL server. Keep the URI private as a Render secret; it contains your database password. Then save the environment changes and redeploy. Run `server/schema.sql` once in the Supabase **SQL Editor** if it has not already been applied.
+
+To use separate environment fields instead, set all five values: `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, and `PGDATABASE`. Do not leave a partial set without a database URL. Keep `PAYMENT_DEMO_MODE=false` on the public production API.
+
 ### Try the PayShap demo (no real payment)
 
 The local demo simulates approval or decline and clearly marks the result as a demo. It does not contact a bank, move money, or require Yoco, Peach, or email credentials. It does require the API to connect to your Supabase PostgreSQL database; no local database or Docker is needed. It is accepted only when the booking API runs with `NODE_ENV=development` and `PAYMENT_DEMO_MODE=true`. Simulated approvals leave the order pending so they cannot be mistaken for real payments.
