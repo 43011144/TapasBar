@@ -29,6 +29,7 @@ const {
 } = require("./auth");
 const {
   sendOrderEmail,
+  sendOwnerOrderNotification,
   sendPasswordResetEmail,
 } = require("./emailService");
 const { createYocoCheckout } = require("./yocoService");
@@ -62,6 +63,20 @@ const managerSetupCodePattern = /^[A-Za-z0-9_-]{32,128}$/;
 
 function isManagerSetupCodeConfigured() {
   return managerSetupCodePattern.test(process.env.MANAGER_SETUP_CODE || "");
+}
+
+async function notifyOwnerAboutOrder(order) {
+  if (!isOrderEmailConfigured()) {
+    return;
+  }
+  try {
+    await sendOwnerOrderNotification(order);
+  } catch (error) {
+    console.error(
+      `Could not send owner notification for order ${order.orderId}:`,
+      error,
+    );
+  }
 }
 
 function matchesManagerSetupCode(suppliedCode) {
@@ -213,6 +228,12 @@ app.post(
     }
 
     if (paidOrder && isOrderEmailConfigured()) {
+      await notifyOwnerAboutOrder({
+        orderId: paidOrder.id,
+        total: paidOrder.total,
+        customerEmail: paidOrder.email,
+        paid: true,
+      });
       try {
         if (paidOrder.orderEmailSentAt === null) {
           await sendOrderEmail({
@@ -373,6 +394,12 @@ app.post(
     }
 
     if (paidOrder && isOrderEmailConfigured()) {
+      await notifyOwnerAboutOrder({
+        orderId: paidOrder.id,
+        total: paidOrder.total,
+        customerEmail: paidOrder.email,
+        paid: true,
+      });
       try {
         if (paidOrder.orderEmailSentAt === null) {
           await sendOrderEmail({
@@ -1249,6 +1276,12 @@ app.post("/api/orders/checkout", async (req, res, next) => {
 
   let emailSent = false;
   if (isOrderEmailConfigured()) {
+    await notifyOwnerAboutOrder({
+      orderId,
+      total: totalAmount,
+      customerEmail: order.customerEmail,
+      paid: false,
+    });
     try {
       await sendOrderEmail({
         to: order.customerEmail,

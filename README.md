@@ -64,6 +64,8 @@ PEACH_WEBHOOK_SECRET=your-random-webhook-secret-at-least-32-characters
 
 Enable PayShap on the Peach business profile, then configure the Peach Orchestration webhook to `https://your-api-host.example.com/api/webhooks/peach` with the custom header `x-peach-webhook-secret` set to the same `PEACH_WEBHOOK_SECRET`. Run `server/schema.sql` against the database to apply the PayShap payment-method constraint. Set `PEACH_ENVIRONMENT=live` and use the matching `prd_` key only after Peach has enabled your live merchant profile. Peach documents PayShap's South African availability, bank limits, and one-refund limit in its [payment-method guide](https://developer.peachpayments.com/docs/pp-payment-methods); its [Orchestration guide](https://playground.peachpayments.com/integrate/hosted-checkout) documents the hosted checkout and webhook flow.
 
+Order and payment notifications are sent to `kgift6995@gmail.com` by default; override this with `ORDER_NOTIFICATION_EMAIL` if needed. To deliver them, configure `RESEND_API_KEY` and a `RESEND_FROM_EMAIL` address on a verified sending domain in both `server/.env` and the Render API service's **Environment** settings. The customer still receives order emails at the address entered during checkout. The demo works without Resend, but it cannot send email until these sender credentials are configured.
+
 1. Configure the API URL in the root `.env` file:
 
    ```env
