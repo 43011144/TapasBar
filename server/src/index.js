@@ -27,10 +27,19 @@ const {
   verifyPassword,
   createSession,
 } = require("./auth");
-const { sendOrderEmail, sendPasswordResetEmail } = require("./emailService");
+const {
+  sendOrderEmail,
+  sendPasswordResetEmail,
+} = require("./emailService");
 const { createYocoCheckout } = require("./yocoService");
+const { createPeachCheckout } = require("./peachService");
 const { verifyYocoWebhook } = require("./yocoWebhook");
-const { getProviderConfigurationIssues } = require("./providerConfig");
+const { verifyPeachWebhook } = require("./peachWebhook");
+const {
+  getProviderConfigurationIssues,
+  isOrderEmailConfigured,
+  isPaymentDemoEnabled,
+} = require("./providerConfig");
 const menuCatalog = require("./menuCatalog.json");
 
 const app = express();
@@ -203,7 +212,7 @@ app.post(
       connection?.release();
     }
 
-    if (paidOrder) {
+    if (paidOrder && isOrderEmailConfigured()) {
       try {
         if (paidOrder.orderEmailSentAt === null) {
           await sendOrderEmail({
@@ -237,6 +246,163 @@ app.post(
         return res
           .status(500)
           .json({ error: "Could not send payment confirmation." });
+      }
+    }
+    return res.sendStatus(200);
+  },
+);
+
+app.post(
+  "/api/webhooks/peach",
+  express.raw({ type: "application/json", limit: "16kb" }),
+  async (req, res) => {
+    const webhookSecret = process.env.PEACH_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      return res
+        .status(503)
+        .json({ error: "Peach PayShap webhooks are not configured." });
+    }
+    if (
+      !Buffer.isBuffer(req.body) ||
+      !verifyPeachWebhook(req.headers, webhookSecret)
+    ) {
+      return res
+        .status(401)
+        .json({ error: "Peach webhook authentication failed." });
+    }
+
+    let event;
+    try {
+      event = JSON.parse(req.body.toString("utf8"));
+    } catch {
+      return res.status(400).json({ error: "Peach webhook body is invalid." });
+    }
+    if (
+      event.event_type !== "payment_succeeded" &&
+      event.event_type !== "payment_failed"
+    ) {
+      return res.sendStatus(200);
+    }
+
+    const payment = event.content;
+    if (
+      typeof payment?.payment_id !== "string" ||
+      !Number.isSafeInteger(payment.amount) ||
+      payment.amount < 1 ||
+      payment.currency !== "ZAR"
+    ) {
+      return res.status(400).json({ error: "Peach payment event is invalid." });
+    }
+
+    let connection;
+    let paidOrder;
+    try {
+      connection = await pool.getConnection();
+      await connection.beginTransaction();
+      const [rows] = await connection.execute(
+        `SELECT o.id, o.customer_email AS customerEmail,
+                o.total_amount AS totalAmount,
+                o.order_email_sent_at AS orderEmailSentAt,
+                o.paid_email_sent_at AS paidEmailSentAt,
+                p.status AS paymentStatus
+         FROM orders AS o
+         JOIN payments AS p ON p.order_id = o.id
+         WHERE p.provider_reference = ? AND p.method = 'payshap'
+         FOR UPDATE`,
+        [payment.payment_id],
+      );
+      if (rows.length !== 1) {
+        await connection.rollback();
+        console.warn("Ignoring Peach event for an unknown payment.");
+        return res.sendStatus(200);
+      }
+
+      const order = rows[0];
+      const amountCents = Math.round(Number(order.totalAmount) * 100);
+      if (payment.amount !== amountCents) {
+        await connection.rollback();
+        console.error(`Peach amount mismatch for order ${order.id}.`);
+        return res.sendStatus(200);
+      }
+
+      if (event.event_type === "payment_failed") {
+        await connection.execute(
+          `UPDATE payments SET status = 'failed'
+           WHERE order_id = ? AND method = 'payshap' AND status = 'pending'`,
+          [order.id],
+        );
+        await connection.commit();
+        return res.sendStatus(200);
+      }
+
+      if (order.paymentStatus !== "pending") {
+        await connection.commit();
+        return res.sendStatus(200);
+      }
+
+      await connection.execute(
+        `UPDATE payments SET status = 'paid'
+         WHERE order_id = ? AND method = 'payshap' AND status = 'pending'`,
+        [order.id],
+      );
+      await connection.execute(
+        `UPDATE orders SET status = 'paid'
+         WHERE id = ? AND status = 'pending'`,
+        [order.id],
+      );
+      await connection.commit();
+
+      if (order.paidEmailSentAt === null && order.customerEmail) {
+        paidOrder = {
+          id: order.id,
+          email: order.customerEmail,
+          total: Number(order.totalAmount).toFixed(2),
+          orderEmailSentAt: order.orderEmailSentAt,
+        };
+      }
+    } catch (error) {
+      if (connection) {
+        await connection.rollback();
+      }
+      console.error("Could not process Peach payment notification:", error);
+      return res
+        .status(500)
+        .json({ error: "Could not process payment notification." });
+    } finally {
+      connection?.release();
+    }
+
+    if (paidOrder && isOrderEmailConfigured()) {
+      try {
+        if (paidOrder.orderEmailSentAt === null) {
+          await sendOrderEmail({
+            to: paidOrder.email,
+            orderId: paidOrder.id,
+            total: paidOrder.total,
+            paid: false,
+          });
+          await pool.execute(
+            `UPDATE orders SET order_email_sent_at = CURRENT_TIMESTAMP
+             WHERE id = ? AND order_email_sent_at IS NULL`,
+            [paidOrder.id],
+          );
+        }
+        await sendOrderEmail({
+          to: paidOrder.email,
+          orderId: paidOrder.id,
+          total: paidOrder.total,
+          paid: true,
+        });
+        await pool.execute(
+          `UPDATE orders SET paid_email_sent_at = CURRENT_TIMESTAMP
+           WHERE id = ? AND paid_email_sent_at IS NULL`,
+          [paidOrder.id],
+        );
+      } catch (error) {
+        console.error(
+          `Could not send paid confirmation for order ${paidOrder.id}:`,
+          error,
+        );
       }
     }
     return res.sendStatus(200);
@@ -991,10 +1157,20 @@ app.post("/api/orders/checkout", async (req, res, next) => {
         "Provide a valid email address and valid menu items for the order.",
     });
   }
-  const configurationIssues = getProviderConfigurationIssues();
+  const requestedMethod = req.body?.paymentMethod || "yoco";
+  if (requestedMethod !== "yoco" && requestedMethod !== "payshap") {
+    return res.status(400).json({ error: "Select a supported payment method." });
+  }
+  const demoPayshap =
+    requestedMethod === "payshap" && isPaymentDemoEnabled();
+  const storedMethod = demoPayshap ? "payshap_demo" : requestedMethod;
+  const configurationIssues = getProviderConfigurationIssues(
+    process.env,
+    requestedMethod,
+  );
   if (configurationIssues.length > 0) {
     return res.status(503).json({
-      error: `Checkout is not configured: ${configurationIssues.join("; ")}. Add the provider settings to the root .env and restart the booking-api.`,
+      error: `Checkout is not configured: ${configurationIssues.join("; ")}. For local PayShap demo mode, set NODE_ENV=development and PAYMENT_DEMO_MODE=true in server/.env, then restart the booking API.`,
     });
   }
 
@@ -1034,15 +1210,28 @@ app.post("/api/orders/checkout", async (req, res, next) => {
 
     const [paymentResult] = await connection.execute(
       `INSERT INTO payments (order_id, amount, currency, method, status)
-       VALUES (?, ?, 'ZAR', 'yoco', 'pending')`,
-      [orderId, totalAmount],
+       VALUES (?, ?, 'ZAR', ?, 'pending')`,
+      [orderId, totalAmount, storedMethod],
     );
     paymentId = paymentResult.insertId;
 
-    checkout = await createYocoCheckout({
-      amountCents: order.totalCents,
-      orderId,
-    });
+    if (demoPayshap) {
+      checkout = {
+        id: `demo-payshap-${orderId}`,
+        redirectUrl: null,
+      };
+    } else if (requestedMethod === "payshap") {
+      checkout = await createPeachCheckout({
+        amountCents: order.totalCents,
+        orderId,
+        customerEmail: order.customerEmail,
+      });
+    } else {
+      checkout = await createYocoCheckout({
+        amountCents: order.totalCents,
+        orderId,
+      });
+    }
     await connection.execute(
       `UPDATE payments SET provider_reference = ? WHERE id = ?`,
       [checkout.id, paymentId],
@@ -1059,24 +1248,26 @@ app.post("/api/orders/checkout", async (req, res, next) => {
   }
 
   let emailSent = false;
-  try {
-    await sendOrderEmail({
-      to: order.customerEmail,
-      orderId,
-      total: totalAmount,
-      paid: false,
-    });
-    await pool.execute(
-      `UPDATE orders SET order_email_sent_at = CURRENT_TIMESTAMP
-       WHERE id = ? AND order_email_sent_at IS NULL`,
-      [orderId],
-    );
-    emailSent = true;
-  } catch (error) {
-    console.error(
-      `Could not send order confirmation for order ${orderId}:`,
-      error,
-    );
+  if (isOrderEmailConfigured()) {
+    try {
+      await sendOrderEmail({
+        to: order.customerEmail,
+        orderId,
+        total: totalAmount,
+        paid: false,
+      });
+      await pool.execute(
+        `UPDATE orders SET order_email_sent_at = CURRENT_TIMESTAMP
+         WHERE id = ? AND order_email_sent_at IS NULL`,
+        [orderId],
+      );
+      emailSent = true;
+    } catch (error) {
+      console.error(
+        `Could not send order confirmation for order ${orderId}:`,
+        error,
+      );
+    }
   }
 
   return res.status(201).json({
@@ -1089,11 +1280,74 @@ app.post("/api/orders/checkout", async (req, res, next) => {
     payment: {
       id: paymentId,
       status: "pending",
-      method: "yoco",
+      method: storedMethod,
     },
-    checkout: { redirectUrl: checkout.redirectUrl },
+    checkout: {
+      mode: demoPayshap ? "demo" : "provider",
+      redirectUrl: checkout.redirectUrl,
+    },
     emailSent,
   });
+});
+
+app.post("/api/orders/:orderId/demo-payment", async (req, res, next) => {
+  if (!isPaymentDemoEnabled()) {
+    return res.status(404).json({ error: "Demo payments are disabled." });
+  }
+  const orderId = Number(req.params.orderId);
+  const outcome = req.body?.outcome;
+  if (
+    !Number.isSafeInteger(orderId) ||
+    orderId < 1 ||
+    (outcome !== "approved" && outcome !== "declined")
+  ) {
+    return res.status(400).json({ error: "Demo payment details are invalid." });
+  }
+
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+    const [rows] = await connection.execute(
+      `SELECT o.status AS orderStatus, p.status AS paymentStatus
+       FROM orders AS o
+       JOIN payments AS p ON p.order_id = o.id
+       WHERE o.id = ? AND p.method = 'payshap_demo'
+         AND p.provider_reference = ?
+       FOR UPDATE`,
+      [orderId, `demo-payshap-${orderId}`],
+    );
+    if (rows.length !== 1) {
+      await connection.rollback();
+      return res.status(404).json({ error: "Demo order not found." });
+    }
+    if (rows[0].paymentStatus !== "pending") {
+      await connection.rollback();
+      return res.status(409).json({ error: "Demo payment is already complete." });
+    }
+
+    // A simulated approval must never make an order look paid: no funds move.
+    const paymentStatus = outcome === "approved" ? "cancelled" : "failed";
+    await connection.execute(
+      `UPDATE payments SET status = ?
+       WHERE order_id = ? AND method = 'payshap_demo' AND status = 'pending'`,
+      [paymentStatus, orderId],
+    );
+    await connection.commit();
+    return res.json({
+      demo: true,
+      outcome,
+      order: { id: orderId, status: rows[0].orderStatus },
+      payment: { status: paymentStatus },
+    });
+  } catch (error) {
+    if (connection) {
+      await connection.rollback();
+    }
+    return next(error);
+  } finally {
+    connection?.release();
+  }
 });
 
 app.post("/api/reservations", async (req, res, next) => {

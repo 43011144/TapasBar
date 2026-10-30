@@ -26,6 +26,36 @@ When the build finishes, use its install/download link to get the APK on your de
 
 ## Run the app locally
 
+Install Node.js LTS first; it includes both `node` and `npm`. After installing, close and reopen VS Code so its terminal refreshes `PATH`, then check `node --version` and `npm --version`. If PowerShell says `npm` is not recognized, Node.js is not installed or VS Code needs to be restarted.
+
+### Try the PayShap demo (no real payment)
+
+The local demo simulates approval or decline and clearly marks the result as a demo. It does not contact a bank, move money, or require Yoco, Peach, or email credentials. It does require the API and its PostgreSQL database to be running. It is accepted only when the booking API runs with `NODE_ENV=development` and `PAYMENT_DEMO_MODE=true`. Simulated approvals leave the order pending so they cannot be mistaken for real payments.
+
+1. In `server/.env`, set:
+
+   ```env
+   NODE_ENV=development
+   PAYMENT_DEMO_MODE=true
+   ```
+
+2. Configure the root `.env` API URL, initialize the database by running `server/schema.sql` once in the PostgreSQL database, and start the API and Expo app using the local steps below. Add a menu item to the order, open **Payment**, choose **PayShap**, and place the order.
+3. Choose **Simulate bank approval** or **Simulate bank decline**. The page labels the simulation, the payment record uses method `payshap_demo`, and the order remains pending; no money is transferred.
+
+### Configure real PayShap payments
+
+Real PayShap checkout uses Peach Orchestration's hosted payment page. You need a Peach merchant profile with PayShap enabled, a Peach API key and profile ID, and a configured webhook. Add these secrets to `server/.env` or the API host's private environment settings; do not put them in the app bundle or commit them:
+
+```env
+PEACH_ENVIRONMENT=sandbox
+PEACH_API_KEY=snd_your_peach_api_key
+PEACH_PROFILE_ID=pro_your_peach_profile_id
+PEACH_RETURN_URL=https://your-public-site.example.com/payment-return
+PEACH_WEBHOOK_SECRET=your-random-webhook-secret-at-least-32-characters
+```
+
+Enable PayShap on the Peach business profile, then configure the Peach Orchestration webhook to `https://your-api-host.example.com/api/webhooks/peach` with the custom header `x-peach-webhook-secret` set to the same `PEACH_WEBHOOK_SECRET`. Run `server/schema.sql` against the database to apply the PayShap payment-method constraint. Set `PEACH_ENVIRONMENT=live` and use the matching `prd_` key only after Peach has enabled your live merchant profile. Peach documents PayShap's South African availability, bank limits, and one-refund limit in its [payment-method guide](https://developer.peachpayments.com/docs/pp-payment-methods); its [Orchestration guide](https://playground.peachpayments.com/integrate/hosted-checkout) documents the hosted checkout and webhook flow.
+
 1. Configure the API URL in the root `.env` file:
 
    ```env
@@ -38,7 +68,7 @@ When the build finishes, use its install/download link to get the APK on your de
 
    ```bash
    cd server
-   npm install
+   npm ci
    # Configure server/.env using server/.env.example and run schema.sql once.
    npm run check-db
    npm run bootstrap-manager -- you@example.com
@@ -48,8 +78,12 @@ When the build finishes, use its install/download link to get the APK on your de
 3. From the project root (Terminal B), install dependencies and start Expo:
 
    ```bash
-   npm install
-   npx expo start -c
+   npm ci
+   npm start -- --clear
    ```
+
+### Start from VS Code
+
+After dependencies are installed and the root and server `.env` files are configured, press `Ctrl+Shift+P`, choose **Tasks: Run Task**, then select **TapasBar: Start API** and **TapasBar: Start Expo**. To run the web demo, select **TapasBar: Start Web** instead. These tasks call Node directly, so they work when `node` is available but the `npm` command is missing from VS Code's `PATH`. If `npm` is not recognized, reopen VS Code after installing Node.js LTS. For web only, the app can also be started with `node ./node_modules/expo/bin/cli start --web --clear` from the project root.
 
 The root `.env` must set `EXPO_PUBLIC_BOOKING_API_URL`. For a physical phone, use your computer's LAN address instead of `localhost`. Menu and logo images are in `assets/images/`.

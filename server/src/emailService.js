@@ -11,7 +11,7 @@ async function sendOrderEmail({ to, orderId, total, paid }) {
     : `Tapas order #${orderId} received`;
   const statusMessage = paid
     ? "Your payment has been confirmed."
-    : "We have received your order. Complete payment using the Yoco checkout page.";
+    : "We have received your order. Complete payment using the secure payment provider checkout page.";
   const text = [
     `Thank you for ordering from Tapas.`,
     ``,

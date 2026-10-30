@@ -127,6 +127,11 @@ CREATE TABLE IF NOT EXISTS payments (
 
 CREATE INDEX IF NOT EXISTS idx_payments_order ON payments (order_id);
 
+ALTER TABLE payments DROP CONSTRAINT IF EXISTS chk_payments_method;
+ALTER TABLE payments ADD CONSTRAINT chk_payments_method CHECK (
+  method IN ('card', 'yoco', 'payshap', 'payshap_demo')
+);
+
 INSERT INTO restaurant_tables (id, floor_number, min_capacity, max_capacity)
 VALUES
   (1, 1, 3, 4),

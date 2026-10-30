@@ -1,0 +1,56 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "TapasBar: Start API",
+      "type": "process",
+      "command": "node",
+      "args": ["--watch", "--env-file=.env", "src/index.js"],
+      "options": {
+        "cwd": "${workspaceFolder}/server"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "TapasBar: Start Expo",
+      "type": "process",
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/node_modules/expo/bin/cli",
+        "start",
+        "--clear"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "TapasBar: Start Web",
+      "type": "process",
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/node_modules/expo/bin/cli",
+        "start",
+        "--web",
+        "--clear"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    }
+  ]
+}

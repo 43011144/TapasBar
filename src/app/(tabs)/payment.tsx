@@ -12,7 +12,12 @@ import {
 import ScreenHeader from "../../components/ScreenHeader";
 import { layout } from "../../constants/theme";
 import { useApp } from "../../context/AppContext";
-import { createCheckout } from "../../services/orderService";
+import {
+  completeDemoPayment,
+  createCheckout,
+  type CheckoutPaymentMethod,
+  type DemoPaymentOutcome,
+} from "../../services/orderService";
 import {
   normalizeEmailAddress,
   validateEmailAddress,
@@ -23,11 +28,14 @@ function formatPrice(amount: number) {
 }
 
 export default function PaymentScreen() {
-  const { colors, orderItems, orderTotal, addNotification } = useApp();
+  const { colors, orderItems, orderTotal, addNotification, clearOrder } = useApp();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [customerEmail, setCustomerEmail] = useState("");
+  const [paymentMethod, setPaymentMethod] =
+    useState<CheckoutPaymentMethod>("payshap");
   const [checkoutNotice, setCheckoutNotice] = useState<string | null>(null);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  const [demoOrderId, setDemoOrderId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCheckout = async () => {
@@ -45,6 +53,7 @@ export default function PaymentScreen() {
     setIsSubmitting(true);
     setCheckoutNotice(null);
     setCheckoutUrl(null);
+    setDemoOrderId(null);
     try {
       const checkout = await createCheckout(
         orderItems.map(({ id, name, price, quantity }) => ({
@@ -54,24 +63,36 @@ export default function PaymentScreen() {
           quantity,
         })),
         email,
+        paymentMethod,
       );
       const confirmationMessage = checkout.emailSent
-        ? `Order #${checkout.order.id} was received. The order confirmation was emailed to ${email}.`
-        : `Order #${checkout.order.id} was received, but the confirmation email could not be sent.`;
+        ? `Order #${checkout.order.id} was received. A receipt was emailed to ${email}.`
+        : `Order #${checkout.order.id} was received. Email receipts are not enabled in this environment.`;
       addNotification({
         title: "Order received",
         message: confirmationMessage,
       });
+
+      if (checkout.checkout.mode === "demo") {
+        setDemoOrderId(checkout.order.id);
+        setCheckoutNotice(
+          `DEMO ONLY: Order #${checkout.order.id} is ready. No money has been transferred. Choose a simulated PayShap result below.`,
+        );
+        return;
+      }
+
       setCheckoutUrl(checkout.checkout.redirectUrl);
+      const providerName =
+        checkout.payment.method === "payshap" ? "Peach PayShap" : "Yoco";
       try {
         await Linking.openURL(checkout.checkout.redirectUrl);
         setCheckoutNotice(
-          `${confirmationMessage} We’ll email you again when Yoco confirms payment.`,
+          `${confirmationMessage} We’ll email you again when ${providerName} confirms payment.`,
         );
       } catch (error) {
-        console.warn("Could not open Yoco checkout.", error);
+        console.warn(`Could not open ${providerName} checkout.`, error);
         setCheckoutNotice(
-          `${confirmationMessage} Tap “Continue to secure payment” to open Yoco checkout.`,
+          `${confirmationMessage} Tap “Continue to secure payment” to open ${providerName} checkout.`,
         );
       }
     } catch (error) {
@@ -83,9 +104,37 @@ export default function PaymentScreen() {
     }
   };
 
+  const handleDemoPayment = async (outcome: DemoPaymentOutcome) => {
+    if (demoOrderId === null) return;
+    setIsSubmitting(true);
+    setCheckoutNotice(null);
+    try {
+      const result = await completeDemoPayment(demoOrderId, outcome);
+      const approved = result.outcome === "approved";
+      const message = approved
+        ? `Demo PayShap approval simulated for order #${result.order.id}. The order is still pending and no money moved.`
+        : `Demo bank decline simulated for order #${result.order.id}. The order is still pending and no money moved.`;
+      setDemoOrderId(null);
+      setCheckoutNotice(message);
+      addNotification({
+        title: approved ? "PayShap demo approved" : "PayShap demo declined",
+        message,
+      });
+      if (approved) clearOrder();
+    } catch (error) {
+      setCheckoutNotice(
+        error instanceof Error
+          ? error.message
+          : "Could not complete the PayShap demo.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <ScreenHeader title="Card payment" subtitle="Review and pay for your order" />
+      <ScreenHeader title="Payment" subtitle="Review and pay for your order" />
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
@@ -116,11 +165,66 @@ export default function PaymentScreen() {
           </View>
         )}
 
+        <Text style={styles.sectionTitle}>Payment method</Text>
+        <View style={styles.methodOptions}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: paymentMethod === "payshap" }}
+            disabled={isSubmitting || demoOrderId !== null || Boolean(checkoutUrl)}
+            onPress={() => {
+              setPaymentMethod("payshap");
+              setCheckoutNotice(null);
+            }}
+            style={[
+              styles.methodOption,
+              paymentMethod === "payshap" && styles.methodOptionSelected,
+            ]}
+          >
+            <Ionicons
+              name={paymentMethod === "payshap" ? "radio-button-on" : "radio-button-off"}
+              size={20}
+              color={paymentMethod === "payshap" ? colors.secondary : colors.muted}
+            />
+            <View style={styles.methodText}>
+              <Text style={styles.methodTitle}>PayShap</Text>
+              <Text style={styles.methodDescription}>
+                Instant bank payment using Peach Payments.
+              </Text>
+            </View>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: paymentMethod === "yoco" }}
+            disabled={isSubmitting || demoOrderId !== null || Boolean(checkoutUrl)}
+            onPress={() => {
+              setPaymentMethod("yoco");
+              setCheckoutNotice(null);
+            }}
+            style={[
+              styles.methodOption,
+              paymentMethod === "yoco" && styles.methodOptionSelected,
+            ]}
+          >
+            <Ionicons
+              name={paymentMethod === "yoco" ? "radio-button-on" : "radio-button-off"}
+              size={20}
+              color={paymentMethod === "yoco" ? colors.secondary : colors.muted}
+            />
+            <View style={styles.methodText}>
+              <Text style={styles.methodTitle}>Card</Text>
+              <Text style={styles.methodDescription}>
+                Pay securely by card using Yoco.
+              </Text>
+            </View>
+          </Pressable>
+        </View>
+
         <Text style={styles.sectionTitle}>Order email and secure payment</Text>
         <View style={styles.card}>
           <Text style={styles.bodyText}>
-            We’ll send your order number here, then email you again after Yoco
-            confirms your payment. Card details are entered securely on Yoco.
+            We’ll send your order number here, then email you again after your
+            selected provider confirms payment. Payment details are entered on
+            the provider’s secure checkout page.
           </Text>
           <Text style={styles.label}>Email address</Text>
           <TextInput
@@ -145,7 +249,7 @@ export default function PaymentScreen() {
               accessibilityRole="alert"
               style={[
                 styles.notice,
-                checkoutUrl && styles.successNotice,
+                (checkoutUrl || demoOrderId !== null) && styles.successNotice,
               ]}
             >
               {checkoutNotice}
@@ -169,18 +273,58 @@ export default function PaymentScreen() {
             </Pressable>
           )}
 
+          {demoOrderId !== null && !isSubmitting && (
+            <View style={styles.demoPanel}>
+              <Text style={styles.demoTitle}>PayShap demo · no money moves</Text>
+              <Text style={styles.bodyText}>
+                Choose a simulated bank result to demonstrate the checkout.
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => handleDemoPayment("approved")}
+                style={styles.payButton}
+              >
+                <Ionicons
+                  name="checkmark-circle-outline"
+                  size={18}
+                  color={colors.textOnDark}
+                />
+                <Text style={styles.payButtonText}>Simulate bank approval</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => handleDemoPayment("declined")}
+                style={styles.demoDeclineButton}
+              >
+                <Text style={styles.demoDeclineButtonText}>
+                  Simulate bank decline
+                </Text>
+              </Pressable>
+            </View>
+          )}
+
           <Pressable
             accessibilityRole="button"
             accessibilityState={{
-              disabled: orderItems.length === 0 || isSubmitting || Boolean(checkoutUrl),
+              disabled:
+                orderItems.length === 0 ||
+                isSubmitting ||
+                Boolean(checkoutUrl) ||
+                demoOrderId !== null,
             }}
             disabled={
-              orderItems.length === 0 || isSubmitting || Boolean(checkoutUrl)
+              orderItems.length === 0 ||
+              isSubmitting ||
+              Boolean(checkoutUrl) ||
+              demoOrderId !== null
             }
             onPress={handleCheckout}
             style={[
               styles.payButton,
-              (orderItems.length === 0 || isSubmitting || Boolean(checkoutUrl)) &&
+              (orderItems.length === 0 ||
+                isSubmitting ||
+                Boolean(checkoutUrl) ||
+                demoOrderId !== null) &&
                 styles.disabledButton,
             ]}
           >
@@ -221,6 +365,57 @@ function createStyles(colors: ReturnType<typeof useApp>["colors"]) {
       borderRadius: 15,
       borderWidth: 1,
       padding: 16,
+    },
+    methodOptions: { gap: 10 },
+    methodOption: {
+      alignItems: "center",
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: 12,
+      borderWidth: 1,
+      flexDirection: "row",
+      gap: 12,
+      padding: 14,
+    },
+    methodOptionSelected: {
+      backgroundColor: colors.secondaryTint,
+      borderColor: colors.secondary,
+    },
+    methodText: { flex: 1, gap: 3 },
+    methodTitle: { color: colors.text, fontSize: 14, fontWeight: "800" },
+    methodDescription: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      lineHeight: 17,
+    },
+    demoPanel: {
+      backgroundColor: colors.successBackground,
+      borderColor: colors.borderSuccess,
+      borderRadius: 11,
+      borderWidth: 1,
+      marginTop: 14,
+      padding: 13,
+    },
+    demoTitle: {
+      color: colors.success,
+      fontSize: 14,
+      fontWeight: "800",
+      marginBottom: 6,
+    },
+    demoDeclineButton: {
+      alignItems: "center",
+      borderColor: colors.border,
+      borderRadius: 11,
+      borderWidth: 1,
+      justifyContent: "center",
+      marginTop: 9,
+      minHeight: 45,
+      paddingHorizontal: 12,
+    },
+    demoDeclineButtonText: {
+      color: colors.text,
+      fontSize: 13,
+      fontWeight: "700",
     },
     summaryRow: {
       alignItems: "flex-start",
