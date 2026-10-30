@@ -7,6 +7,10 @@
     "icon": "./assets/images/icon.png",
     "scheme": "tapasbar",
     "userInterfaceStyle": "automatic",
+    "updates": {
+      "enabled": false,
+      "checkAutomatically": "NEVER"
+    },
     "ios": {},
     "android": {
       "adaptiveIcon": {

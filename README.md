@@ -6,10 +6,12 @@ Tapas Pub & Grill is an Expo Router mobile app with an Express API in `server/`.
 
 After a successful build, the latest APK is published in the repository at [`apk/TapasBar.apk`](apk/TapasBar.apk). Each push to `main` rebuilds the app and updates that file. A copy is also kept as a GitHub Actions artifact for 90 days.
 
+Direct download: [TapasBar.apk](https://github.com/43011144/TapasBar/raw/refs/heads/main/apk/TapasBar.apk). The APK includes its app code and does not need an Expo remote update to launch; new app changes arrive in the next APK build.
+
 1. Open the repository's **Code** tab and open the `apk` folder.
 2. Select `TapasBar.apk` and use **Download raw file**.
 3. Copy the APK to your Android device and open it.
-4. If prompted, allow your browser or file manager to install unknown apps, then tap **Install**.
+4. If prompted, allow your browser or file manager to install unknown apps, then tap **Install**. If you installed an older TapasBar build that fails with “Failed to download remote update,” uninstall it first to clear its cached update, then install the newly downloaded APK. APK files are binary installers; don’t open them as source code in VS Code.
 
 You can also download it from the [Android APK workflow](https://github.com/43011144/TapasBar/actions/workflows/android-apk.yml): select the latest successful run and download `tapasbar-android-apk` under **Artifacts**. The GitHub Actions build is for direct testing and is not a Google Play Store release. Android may require you to uninstall an earlier Actions build before installing a later one.
 
@@ -30,7 +32,7 @@ Install Node.js LTS first; it includes both `node` and `npm`. After installing, 
 
 ### Try the PayShap demo (no real payment)
 
-The local demo simulates approval or decline and clearly marks the result as a demo. It does not contact a bank, move money, or require Yoco, Peach, or email credentials. It does require the API and its PostgreSQL database to be running. It is accepted only when the booking API runs with `NODE_ENV=development` and `PAYMENT_DEMO_MODE=true`. Simulated approvals leave the order pending so they cannot be mistaken for real payments.
+The local demo simulates approval or decline and clearly marks the result as a demo. It does not contact a bank, move money, or require Yoco, Peach, or email credentials. It does require the API to connect to your Supabase PostgreSQL database; no local database or Docker is needed. It is accepted only when the booking API runs with `NODE_ENV=development` and `PAYMENT_DEMO_MODE=true`. Simulated approvals leave the order pending so they cannot be mistaken for real payments.
 
 1. In `server/.env`, set:
 
@@ -39,7 +41,7 @@ The local demo simulates approval or decline and clearly marks the result as a d
    PAYMENT_DEMO_MODE=true
    ```
 
-2. Configure the root `.env` API URL, initialize the database by running `server/schema.sql` once in the PostgreSQL database, and start the API and Expo app using the local steps below. Add a menu item to the order, open **Payment**, choose **PayShap**, and place the order.
+2. Copy the Supabase **Session pooler** connection fields from your Supabase project's **Connect** panel into `server/.env`, configure the root `.env` API URL, and run `server/schema.sql` once in the Supabase **SQL Editor**. Start the API and Expo app using the local steps below. Add a menu item to the order, open **Payment**, choose **PayShap**, and place the order.
 3. Choose **Simulate bank approval** or **Simulate bank decline**. The page labels the simulation, the payment record uses method `payshap_demo`, and the order remains pending; no money is transferred.
 
 ### Configure real PayShap payments
@@ -87,3 +89,5 @@ Enable PayShap on the Peach business profile, then configure the Peach Orchestra
 After dependencies are installed and the root and server `.env` files are configured, press `Ctrl+Shift+P`, choose **Tasks: Run Task**, then select **TapasBar: Start API** and **TapasBar: Start Expo**. To run the web demo, select **TapasBar: Start Web** instead. These tasks call Node directly, so they work when `node` is available but the `npm` command is missing from VS Code's `PATH`. If `npm` is not recognized, reopen VS Code after installing Node.js LTS. For web only, the app can also be started with `node ./node_modules/expo/bin/cli start --web --clear` from the project root.
 
 The root `.env` must set `EXPO_PUBLIC_BOOKING_API_URL`. For a physical phone, use your computer's LAN address instead of `localhost`. Menu and logo images are in `assets/images/`.
+
+The current API connects to your Supabase project's hosted PostgreSQL through the `pg` driver and Session pooler fields in `server/.env`; no local database or Docker setup is needed.
