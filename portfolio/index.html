@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Portfolio of Benedict Gift Seilane, a final-year Software Engineering student building web, mobile and desktop applications."
+    />
+    <meta name="theme-color" content="#101c2b" />
+    <title>Benedict Gift Seilane | Software Developer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a class="wordmark" href="#top" aria-label="Benedict Gift Seilane, home">
+        <span class="wordmark-mark">BG</span>
+        <span>Gift Seilane</span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="#work">Projects</a>
+        <a href="#about">About</a>
+        <a class="nav-github" href="https://github.com/43011144" target="_blank" rel="noreferrer">
+          GitHub <span aria-hidden="true">↗</span>
+        </a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero wrap" id="top" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="status-dot"></span> Software Engineering · South Africa</p>
+          <h1 id="hero-title">I build software<br />that <span>solves real problems.</span></h1>
+          <p class="hero-intro">
+            I’m Benedict Gift Seilane, a final-year BSc IT student focused on full-stack and mobile
+            development. I enjoy turning practical needs into clear, dependable applications.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#work">Explore my work <span aria-hidden="true">↓</span></a>
+            <a class="button button-quiet" href="https://github.com/43011144" target="_blank" rel="noreferrer">
+              Visit GitHub <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+          <div class="hero-note">
+            <span class="note-line"></span>
+            <p>From booking flows and payment webhooks<br />to Android apps and desktop tools.</p>
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="art-orbit orbit-one"></div>
+          <div class="art-orbit orbit-two"></div>
+          <div class="art-core"><span>&lt;/&gt;</span></div>
+          <div class="art-label label-api"><i></i> REST API</div>
+          <div class="art-label label-mobile"><i></i> MOBILE</div>
+          <div class="art-label label-data"><i></i> DATA</div>
+          <div class="art-index">01 <span>/</span> 04</div>
+          <div class="art-grid"></div>
+        </div>
+      </section>
+
+      <section class="signal-strip" aria-label="Areas of focus">
+        <div class="wrap signal-content">
+          <span>WHAT I BUILD</span>
+          <p>Web applications <b>·</b> Mobile experiences <b>·</b> APIs &amp; data systems <b>·</b> Desktop tools</p>
+        </div>
+      </section>
+
+      <section class="section wrap" id="work" aria-labelledby="work-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Selected work <span class="eyebrow-rule"></span></p>
+            <h2 id="work-title">Projects built to be useful.</h2>
+          </div>
+          <p class="section-aside">A mix of freelance, academic and personal work.<br />Open a project to see more code.</p>
+        </div>
+
+        <div class="project-grid">
+          <article class="project-card project-featured">
+            <div class="project-topline"><span>01 / FULL-STACK</span><span class="project-symbol symbol-orange">✳</span></div>
+            <h3>The Tapas Pub &amp; Grill</h3>
+            <p class="project-subtitle">Restaurant ordering &amp; booking platform</p>
+            <p class="project-description">
+              A React Native app and REST API for bookings and orders, with live table availability,
+              role-based access, verified Yoco payment webhooks, email updates and a manager dashboard.
+            </p>
+            <ul class="tag-list" aria-label="Technologies">
+              <li>React Native</li><li>TypeScript</li><li>Node.js</li><li>MySQL</li>
+            </ul>
+            <a class="project-link" href="https://github.com/43011144/TapasBar" target="_blank" rel="noreferrer">
+              View source on GitHub <span aria-hidden="true">↗</span>
+            </a>
+            <a class="project-live" href="https://tapasbar-pub-expo.expo.app/" target="_blank" rel="noreferrer">
+              Open live app <span aria-hidden="true">↗</span>
+            </a>
+          </article>
+
+          <article class="project-card project-trip">
+            <div class="project-topline"><span>02 / ANDROID</span><span class="project-symbol symbol-lime">↗</span></div>
+            <h3>TripBuddy</h3>
+            <p class="project-subtitle">Travel planning &amp; memories app</p>
+            <p class="project-description">
+              An Android trip planner using SQLite, a layered architecture, salted password hashing,
+              sign-in lockout, background work, paginated history and unit tests.
+            </p>
+            <ul class="tag-list" aria-label="Technologies">
+              <li>Java</li><li>Android</li><li>SQLite</li><li>JUnit</li>
+            </ul>
+            <a class="project-link" href="https://github.com/43011144/TripBuddy-Mobile-App" target="_blank" rel="noreferrer">
+              View source on GitHub <span aria-hidden="true">↗</span>
+            </a>
+          </article>
+
+          <article class="project-card project-market">
+            <div class="project-topline"><span>03 / MARKETPLACE</span><span class="project-symbol symbol-blue">⌘</span></div>
+            <h3>Digital Marketing SA</h3>
+            <p class="project-subtitle">C2C marketplace for second-hand electronics</p>
+            <p class="project-description">
+              A buyer-and-seller marketplace with authentication, profiles, searchable listings,
+              cart flows, a MySQL database, an AI agent and Google Maps integration.
+            </p>
+            <ul class="tag-list" aria-label="Technologies">
+              <li>PHP</li><li>JavaScript</li><li>MySQL</li><li>AI agent</li><li>Google Maps</li>
+            </ul>
+            <a class="project-link" href="https://github.com/43011144/digital-marketing-SA-website" target="_blank" rel="noreferrer">
+              View source on GitHub <span aria-hidden="true">↗</span>
+            </a>
+            <a class="project-live" href="https://digitalmarketing121.infinityfreeapp.com" target="_blank" rel="noreferrer">
+              Open live site <span aria-hidden="true">↗</span>
+            </a>
+          </article>
+
+          <article class="project-card project-bugzot">
+            <div class="project-topline"><span>04 / DESKTOP</span><span class="project-symbol symbol-pink">▧</span></div>
+            <h3>Bugzot Training System</h3>
+            <p class="project-subtitle">Enterprise training management desktop app</p>
+            <p class="project-description">
+              A Tkinter application for learner registration, courses, support tickets, assessments
+              and reporting, with design patterns, threaded processing and tests.
+            </p>
+            <ul class="tag-list" aria-label="Technologies">
+              <li>Python</li><li>Tkinter</li><li>Threading</li><li>unittest</li>
+            </ul>
+            <a class="project-link" href="https://github.com/43011144/bugzot_enterprise_training-system" target="_blank" rel="noreferrer">
+              View source on GitHub <span aria-hidden="true">↗</span>
+            </a>
+          </article>
+
+          <article class="project-card project-store">
+            <div class="project-topline"><span>05 / FREELANCE</span><span class="project-symbol symbol-yellow">◒</span></div>
+            <h3>Ms Thoxie Clothing Store</h3>
+            <p class="project-subtitle">Client e-commerce website</p>
+            <p class="project-description">
+              A responsive online store with authentication, a MySQL-backed shopping cart and email
+              functionality, built for a real customer.
+            </p>
+            <ul class="tag-list" aria-label="Technologies">
+              <li>HTML</li><li>CSS</li><li>JavaScript</li><li>Supabase</li>
+            </ul>
+            <a class="project-link" href="https://www.msthoxie.online" target="_blank" rel="noreferrer">
+              Open storefront <span aria-hidden="true">↗</span>
+            </a>
+          </article>
+        </div>
+      </section>
+
+      <section class="about-section" id="about" aria-labelledby="about-title">
+        <div class="wrap about-layout">
+          <div class="about-title">
+            <p class="eyebrow">A little about me <span class="eyebrow-rule"></span></p>
+            <h2 id="about-title">Good software starts with good questions.</h2>
+          </div>
+          <div class="about-copy">
+            <p>
+              I’m completing a BSc in Information Technology (Software Engineering) at Eduvos. I like
+              understanding the problem first, then building systems that are clear to use and sensible
+              to maintain.
+            </p>
+            <p>
+              My projects have taken me across web, mobile and desktop development, with particular
+              interest in backend APIs, authentication, database design and dependable workflows.
+            </p>
+            <a class="text-link" href="https://www.linkedin.com/in/benedict-gift-seilane-b91056276/" target="_blank" rel="noreferrer">
+              Connect on LinkedIn <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="stack-section wrap" aria-labelledby="stack-title">
+        <div class="stack-heading">
+          <p class="eyebrow">Tools I work with <span class="eyebrow-rule"></span></p>
+          <h2 id="stack-title">A practical toolkit.</h2>
+        </div>
+        <div class="stack-list">
+          <div><span>LANGUAGES</span><p>TypeScript · JavaScript · Java · Python · PHP · SQL</p></div>
+          <div><span>APPLICATIONS</span><p>React Native · Expo · Android · Node.js · Express · REST APIs</p></div>
+          <div><span>DATA</span><p>MySQL · SQLite · MongoDB · Supabase</p></div>
+          <div><span>ENGINEERING</span><p>Unit testing · Authentication · Error handling · Logging · Git</p></div>
+        </div>
+      </section>
+
+      <section class="closing-section">
+        <div class="wrap closing-content">
+          <div>
+            <p class="eyebrow">Let’s build something useful</p>
+            <h2>More code, fewer buzzwords.</h2>
+          </div>
+          <a class="button button-light" href="https://github.com/43011144" target="_blank" rel="noreferrer">
+            Find me on GitHub <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer wrap">
+      <p>© 2026 Benedict Gift Seilane</p>
+      <a href="#top">Back to top ↑</a>
+      <a href="https://github.com/43011144" target="_blank" rel="noreferrer">GitHub ↗</a>
+    </footer>
+  </body>
+</html>
