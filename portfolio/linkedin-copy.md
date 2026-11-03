@@ -4,7 +4,7 @@ Prepared from the supplied CV and the current profile. Use this copy in the matc
 
 ## Headline
 
-Final-Year BSc IT (Software Engineering) Student | Full-Stack & Mobile Developer | TypeScript, Java, Python | Open to Graduate & Internship Roles
+Final-Year BSc IT (Software Engineering) | Full-Stack & Mobile Developer | TypeScript, Java, Python | Open to Graduate & Internship Roles | Portfolio (Projects, Skills & CV): https://43011144.github.io/TapasBar/
 
 ## About
 
@@ -15,6 +15,8 @@ My projects include The Tapas Pub & Grill, a React Native/Expo app and Node.js/E
 My toolkit includes TypeScript, JavaScript, Java, Python, PHP, SQL, React Native/Expo, Node.js/Express, REST APIs, MySQL, SQLite, MongoDB and Git. I care about clear architecture, secure authentication and tested, maintainable software.
 
 I’m looking for graduate software engineering or developer internship opportunities. Explore my code on GitHub: https://github.com/43011144
+
+Portfolio with projects, skills and downloadable CV: https://43011144.github.io/TapasBar/
 
 ## Projects
 

@@ -12,7 +12,11 @@ The `Deploy portfolio` GitHub Actions workflow publishes this folder whenever it
 
 <https://43011144.github.io/TapasBar/>
 
-The first workflow run may require GitHub Pages to be enabled for the repository with **GitHub Actions** selected as the source in **Settings → Pages**.
+The portfolio includes a downloadable copy of the CV at `assets/Benedict-Gift-Seilane-CV.pdf` and personal photos in `assets/photos/`.
+
+### Replace the CV
+
+GitHub Pages serves static files, so the CV is updated by replacing `assets/Benedict-Gift-Seilane-CV.pdf` in the repository and committing the replacement to `main`. The deploy workflow then republishes the site. Visitors can download the public PDF from the portfolio; the site itself does not accept uploads or store private files.
 
 ## LinkedIn cover
 

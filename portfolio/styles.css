@@ -110,6 +110,11 @@ h2 { margin-bottom: 0; color: var(--ink); font-size: clamp(29px, 3.2vw, 40px); l
 .about-copy { padding-top: 31px; }
 .about-copy p { margin-bottom: 16px; color: #657386; font-size: 13px; line-height: 1.9; }
 .text-link { display: inline-flex; align-items: center; gap: 10px; margin-top: 10px; color: #147f76; font-size: 11px; font-weight: 800; text-decoration: none; }
+.photo-section { padding-block: 88px 108px; }
+.photo-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.photo-card { overflow: hidden; margin: 0; border: 1px solid var(--line); border-radius: 9px; background: white; box-shadow: 0 13px 35px rgba(16,32,51,.055); }
+.photo-card img { width: 100%; aspect-ratio: 4 / 4.5; display: block; object-fit: cover; }
+.photo-card figcaption { padding: 15px 17px; color: #647186; font-size: 11px; font-weight: 700; }
 .stack-section { display: grid; grid-template-columns: .8fr 1.2fr; gap: 68px; padding-block: 99px 106px; }
 .stack-list { border-top: 1px solid var(--line); }
 .stack-list > div { display: grid; grid-template-columns: 135px 1fr; gap: 14px; padding: 17px 0; border-bottom: 1px solid var(--line); }
@@ -134,6 +139,9 @@ h2 { margin-bottom: 0; color: var(--ink); font-size: clamp(29px, 3.2vw, 40px); l
   .label-data { left: 19%; }
   .about-layout, .stack-section { grid-template-columns: 1fr; gap: 30px; }
   .about-copy { padding-top: 0; }
+  .photo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .photo-card:last-child { grid-column: 1 / -1; }
+  .photo-card:last-child img { aspect-ratio: 16 / 9; }
   .stack-section { padding-block: 74px; }
   .project-store { grid-column: span 3; }
 }
@@ -166,6 +174,10 @@ h2 { margin-bottom: 0; color: var(--ink); font-size: clamp(29px, 3.2vw, 40px); l
   .tag-list { margin-top: 4px; }
   .about-section { padding-block: 67px; }
   .about-copy p { font-size: 12px; }
+  .photo-section { padding-block: 67px; }
+  .photo-grid { grid-template-columns: 1fr; gap: 12px; }
+  .photo-card:last-child { grid-column: auto; }
+  .photo-card img, .photo-card:last-child img { aspect-ratio: 4 / 4.3; }
   .stack-list > div { grid-template-columns: 95px 1fr; gap: 10px; }
   .stack-list p { font-size: 10px; }
   .closing-content { align-items: flex-start; flex-direction: column; }
